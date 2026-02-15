@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import require_scope
 from facebook_auth.utils import decrypt_token
 from pages.models import FacebookPage
 
@@ -52,7 +53,7 @@ class InsightsSyncView(APIView):
     Fetch insights from Facebook and store locally.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("analytics:write")]
 
     @swagger_auto_schema(
         operation_id="analytics_sync",
@@ -170,7 +171,7 @@ class InsightsListView(APIView):
     List stored insights for a page with optional filters.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("analytics:read")]
 
     @swagger_auto_schema(
         operation_id="analytics_list",
@@ -244,7 +245,7 @@ class InsightsSummaryView(APIView):
     Aggregated summary of insights for a page.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("analytics:read")]
 
     @swagger_auto_schema(
         operation_id="analytics_summary",
@@ -334,7 +335,7 @@ class InsightsExportView(APIView):
     Export insights as a CSV file download.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("analytics:read")]
 
     @swagger_auto_schema(
         operation_id="analytics_export",

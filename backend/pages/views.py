@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import require_scope
 from facebook_auth.utils import decrypt_token, encrypt_token
 
 from .models import FacebookPage
@@ -27,7 +28,7 @@ class PageListView(generics.ListAPIView):
     """
 
     serializer_class = FacebookPageSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("pages:read")]
 
     @swagger_auto_schema(
         operation_id="pages_list",
@@ -57,7 +58,7 @@ class PageSyncView(APIView):
     Fetch pages from Facebook Graph API and sync them to the local database.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("pages:write")]
 
     @swagger_auto_schema(
         operation_id="pages_sync",
@@ -142,7 +143,7 @@ class PageDetailView(generics.RetrieveAPIView):
     """
 
     serializer_class = FacebookPageSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("pages:read")]
     lookup_field = "page_id"
 
     @swagger_auto_schema(
@@ -173,7 +174,7 @@ class PageActivateView(APIView):
     Set a Facebook page as the active page for the user.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("pages:write")]
 
     @swagger_auto_schema(
         operation_id="pages_activate",

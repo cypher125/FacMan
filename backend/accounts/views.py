@@ -5,7 +5,11 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import APIKey
 from .serializers import (
+    APIKeyCreateSerializer,
+    APIKeyCreatedSerializer,
+    APIKeyListSerializer,
     ChangePasswordSerializer,
     LoginSerializer,
     RegisterSerializer,
@@ -355,3 +359,133 @@ class UserProfileView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+class APIKeyListCreateView(APIView):
+    """
+    List or create API keys for the authenticated user.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_id="api_keys_list",
+        operation_summary="List API keys",
+        operation_description=(
+            "Returns all API keys belonging to the authenticated user. "
+            "The full key value is never shown — only the prefix."
+        ),
+        responses={
+            200: openapi.Response(
+                description="List of API keys.",
+                schema=APIKeyListSerializer(many=True),
+            ),
+        },
+        tags=["API Keys"],
+    )
+    def get(self, request):
+        keys = APIKey.objects.filter(user=request.user)
+        serializer = APIKeyListSerializer(keys, many=True)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        operation_id="api_keys_create",
+        operation_summary="Create an API key",
+        operation_description=(
+            "Creates a new API key with the specified name and scopes. "
+            "The full key is returned **only in this response** — store it securely.\n\n"
+            "**Valid scopes:** `pages:read`, `pages:write`, `posts:read`, `posts:write`, "
+            "`analytics:read`, `analytics:write`, `messaging:read`, `messaging:write`, "
+            "`scheduler:read`, `scheduler:write`"
+        ),
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["name", "scopes"],
+            properties={
+                "name": openapi.Schema(
+                    type=openapi.TYPE_STRING,
+                    description="A friendly label for this API key.",
+                ),
+                "scopes": openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(type=openapi.TYPE_STRING),
+                    description="List of permission scopes.",
+                ),
+            },
+        ),
+        responses={
+            201: openapi.Response(
+                description="API key created. The full key is included in this response only.",
+                schema=APIKeyCreatedSerializer,
+            ),
+            400: openapi.Response(description="Validation error."),
+        },
+        tags=["API Keys"],
+    )
+    def post(self, request):
+        serializer = APIKeyCreateSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        api_key = serializer.save()
+        return Response(
+            APIKeyCreatedSerializer(api_key).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class APIKeyDetailView(APIView):
+    """
+    Retrieve or revoke an API key.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_key(self, request, pk):
+        try:
+            return APIKey.objects.get(pk=pk, user=request.user)
+        except APIKey.DoesNotExist:
+            return None
+
+    @swagger_auto_schema(
+        operation_id="api_keys_detail",
+        operation_summary="Get API key details",
+        operation_description="Returns details of a specific API key. The full key is never shown.",
+        responses={
+            200: openapi.Response(
+                description="API key details.",
+                schema=APIKeyListSerializer,
+            ),
+            404: openapi.Response(description="API key not found."),
+        },
+        tags=["API Keys"],
+    )
+    def get(self, request, pk):
+        api_key = self._get_key(request, pk)
+        if not api_key:
+            return Response(
+                {"error": "API key not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(APIKeyListSerializer(api_key).data)
+
+    @swagger_auto_schema(
+        operation_id="api_keys_revoke",
+        operation_summary="Revoke an API key",
+        operation_description="Deactivates an API key. This action cannot be undone.",
+        responses={
+            204: openapi.Response(description="API key revoked."),
+            404: openapi.Response(description="API key not found."),
+        },
+        tags=["API Keys"],
+    )
+    def delete(self, request, pk):
+        api_key = self._get_key(request, pk)
+        if not api_key:
+            return Response(
+                {"error": "API key not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        api_key.is_active = False
+        api_key.save(update_fields=["is_active"])
+        return Response(status=status.HTTP_204_NO_CONTENT)

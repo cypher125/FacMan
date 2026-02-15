@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import require_scope
 from facebook_auth.utils import decrypt_token
 from pages.models import FacebookPage
 from posts.models import Post
@@ -55,7 +56,7 @@ class BulkScheduleListView(generics.ListAPIView):
     """
 
     serializer_class = BulkScheduleListSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:read")]
 
     @swagger_auto_schema(
         operation_id="bulk_schedule_list",
@@ -83,7 +84,7 @@ class BulkScheduleDetailView(generics.RetrieveAPIView):
     """
 
     serializer_class = BulkScheduleSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:read")]
 
     @swagger_auto_schema(
         operation_id="bulk_schedule_detail",
@@ -110,7 +111,7 @@ class BulkScheduleCreateView(APIView):
     Create a bulk schedule and publish/schedule all items to Facebook.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:write")]
 
     @swagger_auto_schema(
         operation_id="bulk_schedule_create",
@@ -265,7 +266,7 @@ class ContentCalendarView(APIView):
     Get posts organized by date for a calendar view.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:read")]
 
     @swagger_auto_schema(
         operation_id="content_calendar",
@@ -370,7 +371,7 @@ class TeamMemberListView(generics.ListAPIView):
     """
 
     serializer_class = TeamMemberSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:read")]
 
     @swagger_auto_schema(
         operation_id="team_members_list",
@@ -402,7 +403,7 @@ class TeamMemberAddView(APIView):
     Add a team member to a page.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:write")]
 
     @swagger_auto_schema(
         operation_id="team_members_add",
@@ -490,7 +491,7 @@ class TeamMemberUpdateView(APIView):
     Update a team member's role.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:write")]
 
     @swagger_auto_schema(
         operation_id="team_members_update",
@@ -556,7 +557,7 @@ class TeamMemberRemoveView(APIView):
     Remove a team member from a page.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:write")]
 
     @swagger_auto_schema(
         operation_id="team_members_remove",
@@ -601,7 +602,7 @@ class AdvancedAnalyticsView(APIView):
     Cross-page analytics comparison and post performance.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:read")]
 
     @swagger_auto_schema(
         operation_id="advanced_analytics",
@@ -709,7 +710,7 @@ class TopPostsView(APIView):
     Get top performing posts ranked by engagement.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("scheduler:read")]
 
     @swagger_auto_schema(
         operation_id="top_posts",

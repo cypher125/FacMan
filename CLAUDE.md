@@ -33,7 +33,7 @@ FacMan/
 │   │   ├── urls.py           # Root URL config with Swagger docs
 │   │   ├── wsgi.py
 │   │   └── asgi.py
-│   ├── accounts/             # User auth (email/password) & profiles
+│   ├── accounts/             # User auth (email/password), profiles & API keys
 │   ├── facebook_auth/        # Facebook OAuth integration
 │   ├── pages/                # Facebook page management
 │   ├── posts/                # Content creation & publishing
@@ -52,7 +52,7 @@ Seven Django apps are implemented:
 
 ```
 backend/
-├── accounts/          # User authentication (email/password + profiles)
+├── accounts/          # User authentication (email/password + profiles + API keys)
 ├── facebook_auth/     # Facebook OAuth integration
 ├── pages/             # Facebook page management
 ├── posts/             # Content creation & scheduling
@@ -72,6 +72,7 @@ backend/
 - **Notification:** user (FK), page (FK), notification_type, title, body, is_read
 - **BulkSchedule/BulkScheduleItem:** bulk scheduling with per-item status tracking
 - **TeamMember:** user (FK), page (FK), role (admin/editor/analyst/viewer)
+- **APIKey:** user (FK), name, key (64-char hex, unique), prefix (first 8 chars), scopes (JSON list), is_active, last_used_at, created_at
 
 ## Key API Endpoints
 
@@ -82,6 +83,8 @@ backend/
 - `/api/auth/logout/` - Delete auth token
 - `/api/auth/change-password/` - Change password
 - `/api/auth/me/` - User profile (GET/PATCH)
+- `/api/auth/api-keys/` - Developer API keys (list/create)
+- `/api/auth/api-keys/{id}/` - API key detail/revoke
 - `/api/auth/facebook/login/` - Facebook OAuth URL
 - `/api/auth/facebook/callback/` - Facebook OAuth callback
 - `/api/pages/` - Page management (list, sync, detail, activate)
@@ -122,12 +125,24 @@ See `.env.example` for all required variables. Key groups:
 5. **Engagement** - Comments, messages, notifications, real-time updates
 6. **Advanced** - Bulk scheduling, content calendar, team collaboration, advanced analytics
 
+## Developer API Key System
+
+External developers can programmatically access the FacMan API using scoped API keys.
+
+- **Authentication:** `Authorization: Api-Key <key>` header
+- **Key generation:** `secrets.token_hex(32)` → 64-char hex string, shown only once on creation
+- **Key files:** `accounts/authentication.py` (DRF auth backend), `accounts/permissions.py` (scope checking)
+- **Scopes:** `pages:read`, `pages:write`, `posts:read`, `posts:write`, `analytics:read`, `analytics:write`, `messaging:read`, `messaging:write`, `scheduler:read`, `scheduler:write`
+- **Behavior:** Regular Token auth has full access (no scope restrictions). API key requests are restricted to granted scopes. Missing scope → 403.
+- **Endpoints:** `POST /api/auth/api-keys/` (create), `GET /api/auth/api-keys/` (list), `GET /api/auth/api-keys/{id}/` (detail), `DELETE /api/auth/api-keys/{id}/` (revoke)
+- All existing app views enforce scopes via `require_scope()` permission class from `accounts.permissions`
+
 ## Development Notes
 
-- `settings.py` is configured with DRF, CORS, allauth, token auth, and all custom apps
+- `settings.py` is configured with DRF, CORS, allauth, token auth, API key auth, and all custom apps
 - `urls.py` routes all API endpoints plus Swagger/ReDoc docs
 - All seven Django apps are created and have models, views, serializers, and URLs
-- Authentication supports both email/password (standalone) and Facebook OAuth
+- Authentication supports email/password (standalone), Facebook OAuth, and developer API keys with scoped permissions
 - The virtual environment (`venv/`) exists but verify dependencies are installed
 - Use `python-decouple` or `python-dotenv` for env var loading (both are in requirements)
 - Development uses ngrok for HTTPS (required by Facebook OAuth in some flows)

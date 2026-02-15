@@ -49,7 +49,7 @@ FacMan allows users to:
 | Layer | Technology |
 |---|---|
 | Backend | Django 5.1.5, Django REST Framework 3.15.0 |
-| Auth | django-allauth, Token Authentication |
+| Auth | django-allauth, Token Authentication, Scoped API Keys |
 | Facebook | facebook-sdk 3.1.0, Graph API v18.0 |
 | Database | SQLite3 (dev), PostgreSQL (prod) |
 | Cache/Broker | Redis 5.0.1, django-redis |
@@ -76,10 +76,12 @@ FacMan/
 │   │   ├── urls.py              # Root URL config with Swagger docs
 │   │   ├── wsgi.py
 │   │   └── asgi.py
-│   ├── accounts/                # User accounts & authentication
-│   │   ├── models.py            # Custom User model
-│   │   ├── views.py             # Register, login, logout, change password, profile
-│   │   ├── serializers.py       # Register, login, change password, user serializers
+│   ├── accounts/                # User accounts, authentication & API keys
+│   │   ├── models.py            # Custom User model, APIKey model
+│   │   ├── views.py             # Register, login, logout, change password, profile, API keys
+│   │   ├── serializers.py       # Register, login, change password, user, API key serializers
+│   │   ├── authentication.py    # APIKeyAuthentication backend
+│   │   ├── permissions.py       # HasAPIKeyScope, require_scope()
 │   │   └── urls.py
 │   ├── facebook_auth/           # Facebook OAuth integration
 │   │   ├── views.py             # Login, callback
@@ -127,7 +129,7 @@ FacMan/
 
 ### Authentication
 
-Standalone email/password authentication and Facebook OAuth 2.0 login, both with token-based API authentication.
+Standalone email/password authentication, Facebook OAuth 2.0 login, and developer API keys with scoped permissions.
 
 **Standalone Auth (Email/Password):**
 - **Register** - Create a FacMan account with email, username, and password
@@ -141,6 +143,29 @@ Standalone email/password authentication and Facebook OAuth 2.0 login, both with
 - **OAuth Callback** - Exchanges authorization code for access tokens, creates user accounts automatically
 
 9 Facebook permission scopes are requested: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `pages_manage_metadata`, `pages_manage_engagement`, `pages_messaging`, `pages_read_user_content`, `public_profile`, `email`
+
+**Developer API Keys:**
+- **Create API Key** - Generate a scoped API key for programmatic access (full key shown once)
+- **List API Keys** - View all keys with prefix-only display
+- **Get API Key** - View details of a specific key
+- **Revoke API Key** - Deactivate a key (irreversible)
+
+API keys use the `Authorization: Api-Key <key>` header and enforce fine-grained scopes:
+
+| Scope | Description |
+|-------|-------------|
+| `pages:read` | View connected pages |
+| `pages:write` | Sync and activate pages |
+| `posts:read` | View posts |
+| `posts:write` | Create, update, delete, sync posts |
+| `analytics:read` | View and export insights |
+| `analytics:write` | Sync insights from Facebook |
+| `messaging:read` | View comments, conversations, notifications |
+| `messaging:write` | Reply, like, send messages, mark read |
+| `scheduler:read` | View bulk schedules, calendar, team, analytics |
+| `scheduler:write` | Create bulk schedules, manage team |
+
+Regular Token auth continues to work with full access — scopes only apply to API key requests.
 
 ### Page Management
 
@@ -236,7 +261,7 @@ Interactive API documentation powered by Swagger/OpenAPI.
 - **ReDoc** at `/docs/redoc/` - Alternative documentation view
 - **JSON Schema** at `/docs/json/` - Raw OpenAPI specification
 
-All 39+ endpoints are fully documented with:
+All 43+ endpoints are fully documented with:
 - Operation summaries and descriptions
 - Request body schemas with field descriptions
 - Query parameter and path parameter documentation
@@ -375,11 +400,23 @@ All 39+ endpoints are fully documented with:
 | role | CharField | admin, editor, analyst, viewer |
 | invited_by | FK → User | Who added them |
 
+### APIKey
+| Field | Type | Description |
+|---|---|---|
+| user | FK → User | Key owner |
+| name | CharField | Developer-friendly label |
+| key | CharField | 64-char hex string (unique, shown once on creation) |
+| prefix | CharField | First 8 characters of the key (for identification) |
+| scopes | JSONField | List of permission scopes |
+| is_active | BooleanField | Whether the key is active |
+| last_used_at | DateTimeField | Last time the key was used |
+| created_at | DateTimeField | When the key was created |
+
 ---
 
 ## API Endpoints
 
-All endpoints require `Authorization: Token <your-token>` unless marked as public.
+All endpoints require `Authorization: Token <your-token>` or `Authorization: Api-Key <your-api-key>` unless marked as public. API key requests are restricted to their granted scopes.
 
 ### Authentication
 | Method | Endpoint | Description | Auth |
@@ -390,6 +427,10 @@ All endpoints require `Authorization: Token <your-token>` unless marked as publi
 | POST | `/api/auth/change-password/` | Change password | Required |
 | GET | `/api/auth/me/` | Get user profile | Required |
 | PATCH | `/api/auth/me/` | Update user profile | Required |
+| GET | `/api/auth/api-keys/` | List API keys | Required |
+| POST | `/api/auth/api-keys/` | Create API key (returns full key once) | Required |
+| GET | `/api/auth/api-keys/{id}/` | Get API key details | Required |
+| DELETE | `/api/auth/api-keys/{id}/` | Revoke API key | Required |
 | GET | `/api/auth/facebook/login/` | Get Facebook OAuth URL | Public |
 | GET | `/api/auth/facebook/callback/` | OAuth callback handler | Public |
 

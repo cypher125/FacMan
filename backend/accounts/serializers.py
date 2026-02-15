@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from .models import User
+from .models import VALID_SCOPES, APIKey, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -115,3 +115,55 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.set_password(self.validated_data["new_password"])
         user.save()
         return user
+
+
+class APIKeyCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    scopes = serializers.ListField(
+        child=serializers.CharField(), allow_empty=False
+    )
+
+    def validate_scopes(self, value):
+        invalid = [s for s in value if s not in VALID_SCOPES]
+        if invalid:
+            raise serializers.ValidationError(
+                f"Invalid scopes: {', '.join(invalid)}. "
+                f"Valid scopes: {', '.join(VALID_SCOPES)}"
+            )
+        return value
+
+    def create(self, validated_data):
+        return APIKey.objects.create(
+            user=self.context["request"].user,
+            name=validated_data["name"],
+            scopes=validated_data["scopes"],
+        )
+
+
+class APIKeyListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = APIKey
+        fields = [
+            "id",
+            "name",
+            "prefix",
+            "scopes",
+            "is_active",
+            "last_used_at",
+            "created_at",
+        ]
+
+
+class APIKeyCreatedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = APIKey
+        fields = [
+            "id",
+            "name",
+            "prefix",
+            "key",
+            "scopes",
+            "is_active",
+            "last_used_at",
+            "created_at",
+        ]

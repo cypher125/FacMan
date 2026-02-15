@@ -12,4 +12,10 @@ urlpatterns = [
         name="auth-change-password",
     ),
     path("me/", views.UserProfileView.as_view(), name="user-profile"),
+    path("api-keys/", views.APIKeyListCreateView.as_view(), name="api-keys"),
+    path(
+        "api-keys/<int:pk>/",
+        views.APIKeyDetailView.as_view(),
+        name="api-key-detail",
+    ),
 ]

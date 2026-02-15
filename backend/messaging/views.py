@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import require_scope
 from facebook_auth.utils import decrypt_token
 from pages.models import FacebookPage
 from posts.models import Post
@@ -70,7 +71,7 @@ class CommentSyncView(APIView):
     Fetch comments for a post from Facebook and store locally.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:write")]
 
     @swagger_auto_schema(
         operation_id="comments_sync",
@@ -140,7 +141,7 @@ class CommentListView(generics.ListAPIView):
     """
 
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:read")]
 
     @swagger_auto_schema(
         operation_id="comments_list",
@@ -177,7 +178,7 @@ class CommentReplyView(APIView):
     Reply to a comment on Facebook.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:write")]
 
     @swagger_auto_schema(
         operation_id="comments_reply",
@@ -252,7 +253,7 @@ class CommentLikeView(APIView):
     Like or unlike a comment on Facebook.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:write")]
 
     @swagger_auto_schema(
         operation_id="comments_like",
@@ -327,7 +328,7 @@ class ConversationSyncView(APIView):
     Fetch conversations from Facebook and store locally.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:write")]
 
     @swagger_auto_schema(
         operation_id="conversations_sync",
@@ -412,7 +413,7 @@ class ConversationListView(generics.ListAPIView):
     """
 
     serializer_class = ConversationListSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:read")]
 
     @swagger_auto_schema(
         operation_id="conversations_list",
@@ -446,7 +447,7 @@ class ConversationDetailView(generics.RetrieveAPIView):
     """
 
     serializer_class = ConversationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:read")]
 
     @swagger_auto_schema(
         operation_id="conversations_detail",
@@ -480,7 +481,7 @@ class SendMessageView(APIView):
     Send a message to a user via a Facebook page.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:write")]
 
     @swagger_auto_schema(
         operation_id="messages_send",
@@ -561,7 +562,7 @@ class NotificationListView(generics.ListAPIView):
     """
 
     serializer_class = NotificationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:read")]
 
     @swagger_auto_schema(
         operation_id="notifications_list",
@@ -610,7 +611,7 @@ class NotificationMarkReadView(APIView):
     Mark a notification as read.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:write")]
 
     @swagger_auto_schema(
         operation_id="notifications_mark_read",
@@ -646,7 +647,7 @@ class NotificationMarkAllReadView(APIView):
     Mark all notifications as read for the authenticated user.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("messaging:write")]
 
     @swagger_auto_schema(
         operation_id="notifications_mark_all_read",

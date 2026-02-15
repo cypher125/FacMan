@@ -113,6 +113,7 @@ SITE_ID = 1
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
+        "accounts.authentication.APIKeyAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
@@ -165,7 +166,13 @@ SWAGGER_SETTINGS = {
             "name": "Authorization",
             "in": "header",
             "description": 'Token-based auth. Use the format: **Token &lt;your-token&gt;**',
-        }
+        },
+        "Api-Key": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": 'API key auth. Use the format: **Api-Key &lt;your-api-key&gt;**',
+        },
     },
     "USE_SESSION_AUTH": True,
     "DEFAULT_MODEL_RENDERING": "example",

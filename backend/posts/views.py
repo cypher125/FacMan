@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.permissions import require_scope
 from facebook_auth.utils import decrypt_token
 from pages.models import FacebookPage
 
@@ -36,7 +37,7 @@ class PostListView(generics.ListAPIView):
     """
 
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("posts:read")]
 
     @swagger_auto_schema(
         operation_id="posts_list",
@@ -83,7 +84,7 @@ class PostCreateView(APIView):
     Create and publish a new post to a Facebook page.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("posts:write")]
 
     @swagger_auto_schema(
         operation_id="posts_create",
@@ -218,7 +219,7 @@ class PostDetailView(generics.RetrieveAPIView):
     """
 
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("posts:read")]
 
     @swagger_auto_schema(
         operation_id="posts_detail",
@@ -242,7 +243,7 @@ class PostUpdateView(APIView):
     Update the content of a published post on Facebook.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("posts:write")]
 
     @swagger_auto_schema(
         operation_id="posts_update",
@@ -318,7 +319,7 @@ class PostDeleteView(APIView):
     Delete a post from both Facebook and the local database.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("posts:write")]
 
     @swagger_auto_schema(
         operation_id="posts_delete",
@@ -364,7 +365,7 @@ class PostSyncView(APIView):
     Fetch published posts from a Facebook page and store them locally.
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, require_scope("posts:write")]
 
     @swagger_auto_schema(
         operation_id="posts_sync",
