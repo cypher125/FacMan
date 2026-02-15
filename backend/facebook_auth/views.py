@@ -197,38 +197,3 @@ class FacebookCallbackView(APIView):
         )
 
 
-class FacebookLogoutView(APIView):
-    """
-    Log out the authenticated user by deleting their API token.
-    """
-
-    permission_classes = [permissions.IsAuthenticated]
-
-    @swagger_auto_schema(
-        operation_id="facebook_logout",
-        operation_summary="Log out (delete auth token)",
-        operation_description=(
-            "Deletes the authenticated user's API token, effectively logging them out. "
-            "The client should discard the stored token after this call."
-        ),
-        responses={
-            200: openapi.Response(
-                description="Logged out successfully.",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        "detail": openapi.Schema(type=openapi.TYPE_STRING),
-                    },
-                ),
-                examples={"application/json": {"detail": "Logged out successfully."}},
-            ),
-            401: openapi.Response(description="Authentication credentials were not provided."),
-        },
-        tags=["Authentication"],
-    )
-    def post(self, request):
-        try:
-            request.user.auth_token.delete()
-        except Token.DoesNotExist:
-            pass
-        return Response({"detail": "Logged out successfully."})
