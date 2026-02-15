@@ -4,7 +4,7 @@
 
 FacMan is a web application for managing multiple Facebook Pages through a unified dashboard. It uses Facebook's OAuth 2.0 and Graph API (v18.0) to provide page management, content publishing, engagement monitoring, analytics, and messaging.
 
-**Current status:** Early scaffolding phase (~5-10% complete). Django project is initialized, dependencies are defined, and comprehensive planning docs exist, but no app modules, models, API endpoints, or frontend code have been implemented yet.
+**Current status:** Backend API is largely built. All seven Django apps are implemented with models, views, serializers, and URLs. Authentication supports both standalone email/password and Facebook OAuth. No frontend code yet.
 
 ## Tech Stack
 
@@ -23,28 +23,36 @@ FacMan is a web application for managing multiple Facebook Pages through a unifi
 ```
 FacMan/
 ├── CLAUDE.md                 # This file
+├── README.md                 # Project documentation
 ├── .env.example              # Environment variable template (71 vars)
 ├── requirements.txt          # Python dependencies (46 packages)
 ├── backend/                  # Django project root
 │   ├── manage.py
-│   └── backend/              # Django config package
-│       ├── settings.py       # Currently bare Django defaults
-│       ├── urls.py           # Only /admin/ route exists
-│       ├── wsgi.py
-│       └── asgi.py
+│   ├── backend/              # Django config package
+│   │   ├── settings.py       # DRF, CORS, allauth, token auth configured
+│   │   ├── urls.py           # Root URL config with Swagger docs
+│   │   ├── wsgi.py
+│   │   └── asgi.py
+│   ├── accounts/             # User auth (email/password) & profiles
+│   ├── facebook_auth/        # Facebook OAuth integration
+│   ├── pages/                # Facebook page management
+│   ├── posts/                # Content creation & publishing
+│   ├── analytics/            # Insights & analytics
+│   ├── messaging/            # Comments, conversations, notifications
+│   └── scheduler/            # Bulk scheduling, calendar, team
 ├── docs/
 │   ├── PROJECT_PLAN.md       # Full project plan with 6 phases
 │   └── FACEBOOK_API_REFERENCE.md  # Graph API endpoint reference
 └── venv/                     # Python virtual environment
 ```
 
-## Planned App Architecture
+## App Architecture
 
-Seven Django apps are planned but not yet created:
+Seven Django apps are implemented:
 
 ```
 backend/
-├── accounts/          # User authentication & profiles
+├── accounts/          # User authentication (email/password + profiles)
 ├── facebook_auth/     # Facebook OAuth integration
 ├── pages/             # Facebook page management
 ├── posts/             # Content creation & scheduling
@@ -53,21 +61,34 @@ backend/
 └── scheduler/         # Post scheduling with Celery
 ```
 
-## Core Data Models (Planned)
+## Core Data Models
 
-- **User Extension:** facebook_user_id, access_token (encrypted), token_expires_at, permissions (JSON)
-- **FacebookPage:** page_id, name, access_token, category, user (FK), is_active
-- **Post:** page (FK), content, media_urls (JSON), post_type (text/photo/video), facebook_post_id, scheduled_time, status (draft/scheduled/published), engagement_metrics (JSON)
-- **Analytics:** page (FK), metric_type, value, date, period (day/week/month)
+- **User (AbstractUser):** facebook_user_id, access_token (encrypted), token_expires_at, permissions (JSON), profile_picture_url
+- **FacebookPage:** page_id, name, access_token, category, user (FK), is_active, fan_count, about, link, picture_url
+- **Post:** page (FK), user (FK), content, media_urls (JSON), post_type (text/photo/video/link), facebook_post_id, scheduled_time, status (draft/scheduled/published/failed), engagement_metrics (JSON)
+- **PageInsight:** page (FK), metric_type, value, date, period (day/week/days_28)
+- **Comment:** page (FK), post (FK), facebook_comment_id, message, from_name, from_id, like_count, is_reply
+- **Conversation/Message:** page (FK), participant info, message history
+- **Notification:** user (FK), page (FK), notification_type, title, body, is_read
+- **BulkSchedule/BulkScheduleItem:** bulk scheduling with per-item status tracking
+- **TeamMember:** user (FK), page (FK), role (admin/editor/analyst/viewer)
 
-## Key API Endpoints (Planned)
+## Key API Endpoints
 
-- `/admin/` - Django admin (only existing route)
-- `/api/auth/` - Authentication (OAuth 2.0 flow)
-- `/api/pages/` - Page management (CRUD, list, switch)
+- `/admin/` - Django admin
+- `/docs/` - Swagger UI, `/docs/redoc/` - ReDoc, `/docs/json/` - OpenAPI JSON
+- `/api/auth/register/` - Email/password registration (public)
+- `/api/auth/login/` - Email/password login (public)
+- `/api/auth/logout/` - Delete auth token
+- `/api/auth/change-password/` - Change password
+- `/api/auth/me/` - User profile (GET/PATCH)
+- `/api/auth/facebook/login/` - Facebook OAuth URL
+- `/api/auth/facebook/callback/` - Facebook OAuth callback
+- `/api/pages/` - Page management (list, sync, detail, activate)
 - `/api/posts/` - Content publishing & scheduling
-- `/api/analytics/` - Insights data
-- `/api/messages/` - Messaging & comments
+- `/api/analytics/` - Insights data, summary, CSV export
+- `/api/messages/` - Comments, conversations, notifications
+- `/api/scheduler/` - Bulk scheduling, calendar, team, advanced analytics
 
 ## Facebook Integration Details
 
@@ -103,9 +124,10 @@ See `.env.example` for all required variables. Key groups:
 
 ## Development Notes
 
-- `settings.py` is still default Django scaffolding - needs REST framework, CORS, allauth, Celery, and custom app configuration
-- `urls.py` only has the admin route
-- No Django apps have been created yet via `startapp`
+- `settings.py` is configured with DRF, CORS, allauth, token auth, and all custom apps
+- `urls.py` routes all API endpoints plus Swagger/ReDoc docs
+- All seven Django apps are created and have models, views, serializers, and URLs
+- Authentication supports both email/password (standalone) and Facebook OAuth
 - The virtual environment (`venv/`) exists but verify dependencies are installed
 - Use `python-decouple` or `python-dotenv` for env var loading (both are in requirements)
 - Development uses ngrok for HTTPS (required by Facebook OAuth in some flows)

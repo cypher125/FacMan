@@ -20,11 +20,10 @@ A web application for managing multiple Facebook Pages through a unified dashboa
 - [Data Models](#data-models)
 - [API Endpoints](#api-endpoints)
 - [What's Planned](#whats-planned)
-  - [Standalone Authentication](#1-standalone-authentication)
-  - [Multi-Account Facebook Connections](#2-multi-account-facebook-connections)
-  - [Frontend Application](#3-frontend-application)
-  - [Celery Task Queue](#4-celery-task-queue)
-  - [Webhook Support](#5-webhook-support)
+  - [Multi-Account Facebook Connections](#1-multi-account-facebook-connections)
+  - [Frontend Application](#2-frontend-application)
+  - [Celery Task Queue](#3-celery-task-queue)
+  - [Webhook Support](#4-webhook-support)
 - [Setup & Installation](#setup--installation)
 - [Environment Variables](#environment-variables)
 - [Deployment](#deployment)
@@ -77,13 +76,13 @@ FacMan/
 │   │   ├── urls.py              # Root URL config with Swagger docs
 │   │   ├── wsgi.py
 │   │   └── asgi.py
-│   ├── accounts/                # User accounts & profiles
+│   ├── accounts/                # User accounts & authentication
 │   │   ├── models.py            # Custom User model
-│   │   ├── views.py             # Profile CRUD
-│   │   ├── serializers.py
+│   │   ├── views.py             # Register, login, logout, change password, profile
+│   │   ├── serializers.py       # Register, login, change password, user serializers
 │   │   └── urls.py
 │   ├── facebook_auth/           # Facebook OAuth integration
-│   │   ├── views.py             # Login, callback, logout
+│   │   ├── views.py             # Login, callback
 │   │   ├── services.py          # OAuth token exchange, Graph API calls
 │   │   ├── utils.py             # Token encryption/decryption
 │   │   └── urls.py
@@ -128,12 +127,18 @@ FacMan/
 
 ### Authentication
 
-Facebook OAuth 2.0 login flow with token-based API authentication.
+Standalone email/password authentication and Facebook OAuth 2.0 login, both with token-based API authentication.
 
+**Standalone Auth (Email/Password):**
+- **Register** - Create a FacMan account with email, username, and password
+- **Login** - Authenticate with email (or username) and password, returns API token
+- **Logout** - Deletes API authentication token
+- **Change Password** - Update password with old + new password verification
+- **User Profile** - Get and update the authenticated user's profile
+
+**Facebook OAuth:**
 - **OAuth Login** - Generates Facebook authorization URL with required scopes
 - **OAuth Callback** - Exchanges authorization code for access tokens, creates user accounts automatically
-- **Logout** - Deletes API authentication token
-- **User Profile** - Get and update the authenticated user's profile
 
 9 Facebook permission scopes are requested: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `pages_manage_metadata`, `pages_manage_engagement`, `pages_messaging`, `pages_read_user_content`, `public_profile`, `email`
 
@@ -379,11 +384,14 @@ All endpoints require `Authorization: Token <your-token>` unless marked as publi
 ### Authentication
 | Method | Endpoint | Description | Auth |
 |---|---|---|---|
-| GET | `/api/auth/facebook/login/` | Get Facebook OAuth URL | Public |
-| GET | `/api/auth/facebook/callback/` | OAuth callback handler | Public |
-| POST | `/api/auth/facebook/logout/` | Delete auth token | Required |
+| POST | `/api/auth/register/` | Register with email, username, password | Public |
+| POST | `/api/auth/login/` | Login with email/username + password | Public |
+| POST | `/api/auth/logout/` | Delete auth token | Required |
+| POST | `/api/auth/change-password/` | Change password | Required |
 | GET | `/api/auth/me/` | Get user profile | Required |
 | PATCH | `/api/auth/me/` | Update user profile | Required |
+| GET | `/api/auth/facebook/login/` | Get Facebook OAuth URL | Public |
+| GET | `/api/auth/facebook/callback/` | OAuth callback handler | Public |
 
 ### Pages
 | Method | Endpoint | Description |
@@ -461,22 +469,7 @@ All endpoints require `Authorization: Token <your-token>` unless marked as publi
 
 ## What's Planned
 
-### 1. Standalone Authentication
-
-**Current state:** Users can only log in via Facebook OAuth. No FacMan account exists without Facebook.
-
-**Planned changes:**
-- Email + password registration and login
-- Separate FacMan user accounts from Facebook connections
-- New endpoints:
-
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/register/` | Register with email, username, password |
-| POST | `/api/auth/login/` | Login with credentials, returns token |
-| POST | `/api/auth/change-password/` | Change password |
-
-### 2. Multi-Account Facebook Connections
+### 1. Multi-Account Facebook Connections
 
 **Current state:** One user = one Facebook account. Facebook fields live on the User model.
 
@@ -515,7 +508,7 @@ Register/Login to FacMan
   → Manage all pages from one dashboard
 ```
 
-### 3. Frontend Application
+### 2. Frontend Application
 
 **Current state:** Backend API only. No frontend exists.
 
@@ -530,7 +523,7 @@ Register/Login to FacMan
 - Conversation inbox for messages
 - Team management panel
 
-### 4. Celery Task Queue
+### 3. Celery Task Queue
 
 **Current state:** Celery and django-celery-beat are in dependencies but not configured.
 
@@ -541,7 +534,7 @@ Register/Login to FacMan
 - Rate limit management (200 calls/hour/user)
 - Retry logic for failed Facebook API calls
 
-### 5. Webhook Support
+### 4. Webhook Support
 
 **Current state:** Webhook config variables exist in `.env.example` but no webhook handler is implemented.
 
