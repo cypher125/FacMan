@@ -1,0 +1,50 @@
+# Django and core dependencies
+Django
+djangorestframework
+django-cors-headers
+
+# Authentication
+django-allauth
+social-auth-app-django
+PyJWT
+
+# Facebook SDK
+facebook-sdk
+requests
+requests-oauthlib
+
+# Database
+psycopg2-binary
+redis
+
+# Task Queue
+celery
+django-celery-beat
+django-redis
+
+# Environment and Configuration
+python-decouple
+python-dotenv
+
+# API Documentation
+drf-yasg
+
+# Testing
+pytest
+pytest-django
+pytest-cov
+
+# Development tools
+black
+flake8
+isort
+
+# Date and Time
+python-dateutil
+pytz
+
+# Security
+cryptography
+
+# Utilities
+Pillow

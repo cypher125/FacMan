@@ -1,0 +1,27 @@
+# Database
+db.sqlite3
+db.sqlite3-journal
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+media/
+static/
+logs/
+
+# Environment
+.env
+
+# Migrations (uncomment if you want to ignore auto-generated migrations)
+# */migrations/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
