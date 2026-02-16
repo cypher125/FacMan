@@ -667,6 +667,7 @@ See `.env.example` for the full list of 71 variables.
 
 See [InstallationGuide.md](InstallationGuide.md) for a complete guide covering:
 
+**Standard VPS Deployment:**
 - Ubuntu VPS initial setup and security hardening
 - Dedicated user creation
 - PostgreSQL, Redis, Nginx installation
@@ -675,6 +676,20 @@ See [InstallationGuide.md](InstallationGuide.md) for a complete guide covering:
 - Nginx reverse proxy setup
 - SSL certificate with Let's Encrypt
 - Domain configuration
+
+**Docker Deployment (Alternative):**
+- Docker and Docker Compose installation on the VPS
+- Dockerfile and docker-compose.yml setup
+- PostgreSQL, Redis, Nginx, Celery all containerized
+- SSL with Let's Encrypt in Docker
+- Container management commands
+
+**Facebook App Setup:**
+- Creating a Facebook Developer App
+- Configuring OAuth and permissions
+- Adding test users for Development Mode (no App Review needed)
+- Testing the full OAuth flow
+- Troubleshooting common issues
 
 ---
 

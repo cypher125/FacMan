@@ -102,30 +102,68 @@ export interface Notification {
 
 export interface BulkSchedule {
   id: number;
-  user: number;
   name: string;
+  status: string;
+  total_posts: number;
+  successful_posts: number;
+  failed_posts: number;
+  items?: BulkScheduleItem[];
   created_at: string;
-  items: BulkScheduleItem[];
+  updated_at: string;
 }
 
 export interface BulkScheduleItem {
   id: number;
   page: number;
+  page_name: string;
+  post: number | null;
   content: string;
   post_type: "text" | "photo" | "video" | "link";
-  media_urls: string[];
+  media_url: string;
+  link_url: string;
   scheduled_time: string;
   status: "pending" | "scheduled" | "published" | "failed";
+  error_message: string;
+  created_at: string;
 }
 
 export interface TeamMember {
   id: number;
   user: number;
-  user_email: string;
-  user_username: string;
+  username: string;
+  email: string;
   page: number;
   role: "admin" | "editor" | "analyst" | "viewer";
+  invited_by: number | null;
+  invited_by_username: string;
   created_at: string;
+  updated_at: string;
+}
+
+export interface PageAnalytics {
+  page_id: string;
+  page_name: string;
+  fan_count: number;
+  total_posts: number;
+  published: number;
+  scheduled: number;
+  failed: number;
+  total_reactions: number;
+  total_comments: number;
+  total_shares: number;
+  total_engagement: number;
+}
+
+export interface TopPost {
+  id: number;
+  page_id: string;
+  page_name: string;
+  content: string;
+  post_type: string;
+  facebook_post_id: string;
+  published_at: string | null;
+  engagement_metrics: Record<string, number>;
+  total_engagement: number;
 }
 
 export interface CalendarPost {
@@ -136,6 +174,17 @@ export interface CalendarPost {
   post_type: string;
   scheduled_time: string;
   status: string;
+}
+
+export interface APIKey {
+  id: number;
+  name: string;
+  prefix: string;
+  key?: string;
+  scopes: string[];
+  is_active: boolean;
+  last_used_at: string | null;
+  created_at: string;
 }
 
 export interface ApiError {
