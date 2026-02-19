@@ -49,7 +49,7 @@ export default function PageDetailPage() {
       })
       .then((pageData) => {
         return api
-          .get(`/posts/?page_id=${pageData.id}`)
+          .get(`/posts/?page_id=${pageData.page_id}`)
           .then((res) => {
             const list = res.data.results || res.data;
             setPosts(Array.isArray(list) ? list : []);
@@ -87,7 +87,7 @@ export default function PageDetailPage() {
       .post(`/posts/sync/${page.page_id}/`)
       .then(() => {
         return api
-          .get(`/posts/?page_id=${page.id}`)
+          .get(`/posts/?page_id=${page.page_id}`)
           .then((res) => {
             const list = res.data.results || res.data;
             setPosts(Array.isArray(list) ? list : []);

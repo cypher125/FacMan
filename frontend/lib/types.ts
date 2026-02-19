@@ -50,11 +50,7 @@ export interface PageInsight {
 }
 
 export interface InsightsSummary {
-  total_page_views: number;
-  total_page_impressions: number;
-  total_post_engagements: number;
-  total_new_fans: number;
-  [key: string]: number;
+  [metric_type: string]: number;
 }
 
 export interface Comment {

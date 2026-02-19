@@ -18,7 +18,7 @@ from pages.models import FacebookPage
 
 from .models import PageInsight
 from .serializers import InsightsSummarySerializer, PageInsightSerializer
-from .services import get_page_insights
+from .services import get_page_insights_safe
 
 logger = logging.getLogger(__name__)
 
@@ -115,15 +115,14 @@ class InsightsSyncView(APIView):
         since = request.data.get("since")
         until = request.data.get("until")
 
-        try:
-            fb_insights = get_page_insights(
-                page.page_id, page_token, period=period,
-                since=since, until=until,
-            )
-        except Exception:
-            logger.exception("Failed to fetch insights from Facebook")
+        fb_insights = get_page_insights_safe(
+            page.page_id, page_token, period=period,
+            since=since, until=until,
+        )
+
+        if not fb_insights:
             return Response(
-                {"error": "Failed to fetch insights from Facebook."},
+                {"error": "No insights returned from Facebook. The page may lack data or the access token may be missing permissions."},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 

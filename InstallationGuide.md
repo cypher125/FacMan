@@ -208,7 +208,7 @@ ALLOWED_HOSTS=YOUR_VPS_IP,yourdomain.com,www.yourdomain.com
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=facman_db
 DB_USER=facman_user
-DB_PASSWORD=your-strong-password-here
+DB_PASSWORD=Facman2026
 DB_HOST=localhost
 DB_PORT=5432
 
@@ -1055,7 +1055,7 @@ This section walks you through creating and configuring a Facebook App for FacMa
    - **Web OAuth Login:** Yes
    - **Valid OAuth Redirect URIs:** Add your callback URL(s):
      - For production: `https://yourdomain.com/api/auth/facebook/callback/`
-     - For local dev: `http://localhost:8000/api/auth/facebook/callback/`
+     - For local dev: `https://api.nexryon.com/api/auth/facebook/callback/`
    - **Enforce HTTPS:** Yes (turn off only if testing on localhost without HTTPS)
 7. Click **Save Changes**
 

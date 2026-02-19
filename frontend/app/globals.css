@@ -52,8 +52,56 @@
   --glass-border: rgba(225, 236, 234, 0.6);
 }
 
+/* Dark mode via .dark class (user manually picks Dark) */
+.dark {
+  --primary: #1cf597;
+  --primary-hover: #00ef88;
+  --primary-light: rgba(28, 245, 151, 0.1);
+  --primary-glow: rgba(0, 239, 136, 0.12);
+  --accent: #00ef88;
+  --accent-soft: rgba(0, 239, 136, 0.06);
+
+  --background: #0d1117;
+  --surface: #161b22;
+  --surface-hover: #1c2129;
+  --surface-raised: #1c2129;
+
+  --sidebar-bg: #0d1117;
+  --sidebar-surface: rgba(255, 255, 255, 0.03);
+  --sidebar-text: #6b7280;
+  --sidebar-active: #f0fdf4;
+  --sidebar-accent: #1cf597;
+
+  --card-bg: #161b22;
+  --card-border: #21262d;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.12);
+  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+
+  --foreground: #e6edf3;
+  --text-secondary: #95b2a4;
+  --muted: #7d8590;
+
+  --border: #21262d;
+  --border-light: #1c2129;
+
+  --danger: #f87171;
+  --danger-light: rgba(248, 113, 113, 0.1);
+  --warning: #fbbf24;
+  --warning-light: rgba(251, 191, 36, 0.08);
+  --info: #6aaae4;
+  --info-light: rgba(106, 170, 228, 0.1);
+  --success: #1cf597;
+  --success-light: rgba(28, 245, 151, 0.08);
+
+  --glass-bg: rgba(22, 27, 34, 0.75);
+  --glass-border: rgba(33, 38, 45, 0.6);
+}
+
+/* Dark mode via OS preference (user picks System and OS is dark).
+   The :not(.light):not(.dark) guard ensures explicit choices are never
+   overridden by the media query. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light):not(.dark) {
     --primary: #1cf597;
     --primary-hover: #00ef88;
     --primary-light: rgba(28, 245, 151, 0.1);
