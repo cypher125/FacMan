@@ -134,21 +134,45 @@ export default function MessagesPage() {
   }, [messages]);
 
   // ── Fetch comments when post changes ───────────────────────
-  const fetchComments = () => {
+  const fetchComments = async (autoSync = false) => {
     if (!activePage || !selectedPost?.facebook_post_id) return;
     setLoadingComments(true);
-    api
-      .get(`/messages/comments/${activePage.page_id}/${selectedPost.facebook_post_id}/`)
-      .then((res) => {
-        const list = res.data.results ?? res.data;
-        setComments(Array.isArray(list) ? list : []);
-      })
-      .catch(() => setComments([]))
-      .finally(() => setLoadingComments(false));
+    try {
+      const res = await api.get(
+        `/messages/comments/${activePage.page_id}/${selectedPost.facebook_post_id}/`
+      );
+      const list = res.data.results ?? res.data;
+      const arr: Comment[] = Array.isArray(list) ? list : [];
+
+      // Auto-sync if no local comments but engagement metrics say there are some on Facebook
+      if (arr.length === 0 && autoSync && (selectedPost.engagement_metrics?.comments ?? 0) > 0) {
+        setSyncingComments(true);
+        try {
+          await api.post(
+            `/messages/comments/${activePage.page_id}/${selectedPost.facebook_post_id}/sync/`
+          );
+          const syncRes = await api.get(
+            `/messages/comments/${activePage.page_id}/${selectedPost.facebook_post_id}/`
+          );
+          const syncList = syncRes.data.results ?? syncRes.data;
+          setComments(Array.isArray(syncList) ? syncList : []);
+        } catch {
+          setComments([]);
+        } finally {
+          setSyncingComments(false);
+        }
+      } else {
+        setComments(arr);
+      }
+    } catch {
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
   };
 
   useEffect(() => {
-    fetchComments();
+    fetchComments(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePage, selectedPost]);
 
@@ -190,7 +214,7 @@ export default function MessagesPage() {
     setSyncingComments(true);
     api
       .post(`/messages/comments/${activePage.page_id}/${selectedPost.facebook_post_id}/sync/`)
-      .then(() => fetchComments())
+      .then(() => fetchComments(false))
       .catch(() => {})
       .finally(() => setSyncingComments(false));
   };
@@ -487,7 +511,11 @@ export default function MessagesPage() {
                         <div className="flex flex-col items-center justify-center py-12 text-center">
                           <MessageSquare size={28} className="text-muted" />
                           <p className="mt-3 font-medium">No comments yet</p>
-                          <p className="mt-1 text-sm text-muted">Click Sync to pull comments from Facebook</p>
+                          <p className="mt-1 text-sm text-muted">
+                            {(selectedPost.engagement_metrics?.comments ?? 0) > 0
+                              ? "Comments exist on Facebook but could not be synced. Try clicking Sync."
+                              : "No comments on this post. Click Sync to refresh from Facebook."}
+                          </p>
                         </div>
                       ) : (
                         comments.map((comment) => (
