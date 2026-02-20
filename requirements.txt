@@ -46,5 +46,8 @@ pytz
 # Security
 cryptography
 
+# Static files
+whitenoise
+
 # Utilities
 Pillow
