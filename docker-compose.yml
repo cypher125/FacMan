@@ -1,0 +1,53 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    restart: always
+    expose:
+      - "8080"
+    env_file:
+      - .env.docker
+    volumes:
+      - static_files:/app/backend/static
+      - media_files:/app/backend/media
+    depends_on:
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn backend.wsgi:application --bind 0.0.0.0:8080 --workers 3 --access-logfile - --error-logfile -"
+
+  celery-worker:
+    build: .
+    restart: always
+    env_file:
+      - .env.docker
+    depends_on:
+      redis:
+        condition: service_healthy
+    working_dir: /app/backend
+    command: celery -A backend worker --loglevel=info
+
+  celery-beat:
+    build: .
+    restart: always
+    env_file:
+      - .env.docker
+    depends_on:
+      redis:
+        condition: service_healthy
+    working_dir: /app/backend
+    command: celery -A backend beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+volumes:
+  static_files:
+  media_files:
